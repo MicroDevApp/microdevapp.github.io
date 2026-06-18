@@ -10,34 +10,44 @@
             'Привет',
             function () {
 
-                // Добавляем случайный параметр, чтобы каждый раз грузить
+                Lampa.Activity.push({ url: '', title: 'Привет', component: 'web_page',  page: 1 }); 
 
-                // свежую версию main.html, а не кешированную браузером
+            });
+    };
+}
 
-                var freshUrl = HTML_URL + '?nocache=' + Date.now();
+function WebPageComponent(object) {
+    var html = $('<div class="full-screen-container" style="width: 100%; height: 100%; background: #000;"></div>');
+    var iframe = $('<iframe src="' + HTML_URL + '" style="width: 100%; height: 100%; border: none;"></iframe>');
 
-                Lampa.Iframe.show({
-                    url: freshUrl,
-                    onBack: function () {
+    this.create = function () {
+        html.append(iframe);
+        return html;
+    };
 
-                        // вызывается, когда пользователь нажал "назад"
+    this.render = function () {};
 
-                    }
-                });
-            }
-        );
-    }
+    this.back = function () {
+        Lampa.Activity.backward();
+    };
+
+    this.destroy = function () {
+        html.remove();
+    };
+}
+
+// Регистрируем компонент
+Lampa.Component.add('web_page', WebPageComponent);
 
 
+if (window.appready) {
+    startPlugin();
+} else {
 
-    if (window.appready) {
-        startPlugin();
-    } else {
-
-        Lampa.Listener.follow('app', function (e) {
-            if (e.type == 'ready') {
-                startPlugin();
-            }
-        });
-    }
+    Lampa.Listener.follow('app', function (e) {
+        if (e.type == 'ready') {
+            startPlugin();
+        }
+    });
+}
 })();
