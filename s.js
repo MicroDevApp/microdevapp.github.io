@@ -1,39 +1,26 @@
-(function() {
+(function () {
     'use strict';
 
     function init() {
-        // Убедимся, что мы добавляем объект с обязательными полями
-        Lampa.Settings.push({
-            name: 'my_test_plugin', // Уникальный идентификатор
-            label: 'Моя страница',   // Заголовок, который видит пользователь
-            type: 'button',
-            onClick: function() {
-                Lampa.Activity.push({
-                    url: '',
-                    title: 'Приветствие', // Заголовок страницы
-                    component: 'test_page',
-                    page: 1
-                });
-            }
-
-           
+        // Регистрация в меню Lampa
+        Lampa.Controller.add('content', {
+            toggle: function () {},
+            left: function () {},
+            right: function () {},
+            up: function () {},
+            down: function () {},
+            back: function () {}
         });
-
-        Lampa.Component.add('test_page', function() {
-            this.create = function() {
-                var div = document.createElement('div');
-                div.style.padding = '50px';
-                div.style.textAlign = 'center';
-                div.innerHTML = '<h1>Привет!</h1>';
-                return div;
-            };
-            this.render = function() { return this.create(); };
-        });
+        console.log('Мой плагин инициализирован');
     }
 
-    if (window.lampa) {
+    if (window.appready) {
         init();
     } else {
-        window.addEventListener('lampa:ready', init);
+        Lampa.Listener.follow('app', function (e) {
+            if (e.type == 'ready') {
+                init();
+            }
+        });
     }
 })();
