@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Привет</title>
+<title>Привіт</title>
 <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-        margin: 0;
-        padding: 0;
         color: #fff;
         font-family: Arial, sans-serif;
         font-size: 16px;
@@ -29,7 +27,6 @@
         display: flex;
     }
 
-    /* Кнопки в стиле Lampa — без отступов между ними */
     .btn {
         padding: 0.9em 1.3em;
         border-radius: 0.7em;
@@ -39,6 +36,7 @@
         border: none;
         cursor: pointer;
         outline: none;
+        margin-right: 0.8em;
     }
 
     .btn:focus {
@@ -46,7 +44,62 @@
         color: #000;
     }
 
-    /* Попап в стиле Lampa modal */
+    /* --- Бокове меню розділів --- */
+    .side-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 40;
+    }
+
+    .side-overlay.active {
+        display: block;
+    }
+
+    .side-menu {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 16em;
+        background: #1e1e24;
+        z-index: 41;
+        padding: 2em 0;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+    }
+
+    .side-menu.active {
+        transform: translateX(0);
+    }
+
+    .side-menu__title {
+        font-size: 1em;
+        color: rgba(255,255,255,0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0 1.5em 1em;
+    }
+
+    .side-menu__item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.9em 1.5em;
+        background: none;
+        color: #fff;
+        font-size: 1.2em;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        border-left: 0.2em solid transparent;
+    }
+
+    .side-menu__item:focus {
+        background: rgba(255,255,255,0.1);
+        border-left-color: #fff;
+    }
+
+    /* --- Попап паролю --- */
     .overlay {
         display: none;
         position: fixed;
@@ -105,31 +158,48 @@
 <body>
 
 <div class="page">
-    <div class="message" id="message">Выберите действие</div>
+    <div class="message" id="message">Оберіть дію</div>
     <div class="buttons">
-        <button class="btn" id="btn1">Кнопка 1</button>
+        <button class="btn" id="btnSections">Обрати розділ</button>
         <button class="btn" id="btn2">Кнопка 2</button>
-        <button class="btn" id="btnLogin">Вход</button>
+        <button class="btn" id="btnLogin">Вхід</button>
     </div>
 </div>
 
+<!-- Бокове меню -->
+<div class="side-overlay" id="sideOverlay"></div>
+<div class="side-menu" id="sideMenu">
+    <div class="side-menu__title">Оберіть розділ</div>
+    <button class="side-menu__item" data-section="1">Розділ 1</button>
+    <button class="side-menu__item" data-section="2">Розділ 2</button>
+    <button class="side-menu__item" data-section="3">Розділ 3</button>
+    <button class="side-menu__item" data-section="4">Розділ 4</button>
+    <button class="side-menu__item" data-section="5">Розділ 5</button>
+</div>
+
+<!-- Попап паролю -->
 <div class="overlay" id="overlay">
     <div class="popup">
-        <div class="popup__title">Вход</div>
-        <input class="popup__input" id="passInput" type="password" placeholder="Введите пароль">
+        <div class="popup__title">Вхід</div>
+        <input class="popup__input" id="passInput" type="password" placeholder="Введіть пароль">
         <div class="popup__error" id="passError"></div>
         <div class="popup__footer">
-            <button class="btn" id="btnConfirm">Войти</button>
-            <button class="btn" id="btnCancel">Отмена</button>
+            <button class="btn" id="btnConfirm" style="margin-right:0.8em">Увійти</button>
+            <button class="btn" id="btnCancel">Скасувати</button>
         </div>
     </div>
 </div>
 
 <script>
     var message    = document.getElementById('message');
-    var btn1       = document.getElementById('btn1');
+    var btnSections = document.getElementById('btnSections');
     var btn2       = document.getElementById('btn2');
     var btnLogin   = document.getElementById('btnLogin');
+
+    var sideOverlay = document.getElementById('sideOverlay');
+    var sideMenu    = document.getElementById('sideMenu');
+    var sideItems   = Array.prototype.slice.call(document.querySelectorAll('.side-menu__item'));
+
     var overlay    = document.getElementById('overlay');
     var passInput  = document.getElementById('passInput');
     var passError  = document.getElementById('passError');
@@ -137,19 +207,40 @@
     var btnCancel  = document.getElementById('btnCancel');
 
     var PASSWORD = '123';
+    var mainButtons = [btnSections, btn2, btnLogin];
+    var popupFocusable = [passInput, btnConfirm, btnCancel];
 
-    // --- Главные кнопки ---
-    btn1.addEventListener('click', function () {
-        message.textContent = 'Вы нажали Кнопку 1!';
-    });
-
+    // --- Головні кнопки ---
     btn2.addEventListener('click', function () {
-        message.textContent = 'Вы нажали Кнопку 2!';
+        message.textContent = 'Ви натиснули Кнопку 2!';
     });
 
     btnLogin.addEventListener('click', openPopup);
+    btnSections.addEventListener('click', openSideMenu);
 
-    // --- Попап ---
+    // --- Бокове меню ---
+    function openSideMenu() {
+        sideOverlay.classList.add('active');
+        sideMenu.classList.add('active');
+        setTimeout(function () { sideItems[0].focus(); }, 50);
+    }
+
+    function closeSideMenu() {
+        sideOverlay.classList.remove('active');
+        sideMenu.classList.remove('active');
+        btnSections.focus();
+    }
+
+    sideOverlay.addEventListener('click', closeSideMenu);
+
+    sideItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            message.textContent = 'Обрано: ' + item.textContent;
+            closeSideMenu();
+        });
+    });
+
+    // --- Попап паролю ---
     function openPopup() {
         overlay.classList.add('active');
         passError.textContent = '';
@@ -165,9 +256,9 @@
         if (passInput.value === PASSWORD) {
             passError.textContent = '';
             closePopup();
-            message.textContent = 'Вход выполнен успешно!';
+            message.textContent = 'Вхід виконано успішно!';
         } else {
-            passError.textContent = 'Неверный пароль';
+            passError.textContent = 'Невірний пароль';
             passInput.value = '';
             passInput.focus();
         }
@@ -176,67 +267,54 @@
     btnConfirm.addEventListener('click', tryLogin);
     btnCancel.addEventListener('click', closePopup);
 
-    // --- Навигация пультом ---
-    var mainButtons  = [btn1, btn2, btnLogin];
-    var popupFocusable = [passInput, btnConfirm, btnCancel];
-
+    // --- Навігація пультом ---
     document.addEventListener('keydown', function (e) {
         var code = e.keyCode;
-        var isPopupOpen = overlay.classList.contains('active');
         var active = document.activeElement;
+        var isSideOpen  = sideMenu.classList.contains('active');
+        var isPopupOpen = overlay.classList.contains('active');
 
         // Кнопка назад
         if (code === 27 || code === 461 || code === 10009) {
-            if (isPopupOpen) {
-                closePopup();
-            } else {
-                window.parent.postMessage({ type: 'lampa:back' }, '*');
-            }
+            if (isPopupOpen) { closePopup(); }
+            else if (isSideOpen) { closeSideMenu(); }
+            else { window.parent.postMessage({ type: 'lampa:back' }, '*'); }
             e.preventDefault();
             return;
         }
 
+        // --- Попап ---
         if (isPopupOpen) {
-            var idx = popupFocusable.indexOf(active);
-
-            // Enter — подтвердить везде внутри попапа
             if (code === 13) {
-                if (active === btnCancel) closePopup();
-                else tryLogin();
+                active === btnCancel ? closePopup() : tryLogin();
                 e.preventDefault();
                 return;
             }
-
-            // Стрелка вниз из поля — переход на кнопку "Войти"
-            if (code === 40 && active === passInput) {
-                btnConfirm.focus();
-                e.preventDefault();
-                return;
-            }
-
-            // Стрелка вверх с кнопок — возврат в поле ввода
-            if (code === 38 && (active === btnConfirm || active === btnCancel)) {
-                passInput.focus();
-                e.preventDefault();
-                return;
-            }
-
-            // Стрелки влево/вправо между кнопками попапа
+            if (code === 40 && active === passInput) { btnConfirm.focus(); e.preventDefault(); return; }
+            if (code === 38 && (active === btnConfirm || active === btnCancel)) { passInput.focus(); e.preventDefault(); return; }
             if (active === btnConfirm || active === btnCancel) {
-                if (code === 39) btnCancel.focus();
-                if (code === 37) btnConfirm.focus();
-                e.preventDefault();
+                if (code === 39) { btnCancel.focus(); e.preventDefault(); }
+                if (code === 37) { btnConfirm.focus(); e.preventDefault(); }
             }
-
-        } else {
-            // Навигация по главным кнопкам
-            var i = mainButtons.indexOf(active);
-            if (code === 39) mainButtons[i === mainButtons.length - 1 ? 0 : i + 1].focus();
-            if (code === 37) mainButtons[i <= 0 ? mainButtons.length - 1 : i - 1].focus();
+            return;
         }
+
+        // --- Бокове меню ---
+        if (isSideOpen) {
+            var si = sideItems.indexOf(active);
+            if (code === 40) { sideItems[si < sideItems.length - 1 ? si + 1 : 0].focus(); e.preventDefault(); }
+            if (code === 38) { sideItems[si > 0 ? si - 1 : sideItems.length - 1].focus(); e.preventDefault(); }
+            if (code === 13 && si !== -1) { sideItems[si].click(); e.preventDefault(); }
+            return;
+        }
+
+        // --- Головні кнопки ---
+        var i = mainButtons.indexOf(active);
+        if (code === 39) { mainButtons[i >= mainButtons.length - 1 ? 0 : i + 1].focus(); e.preventDefault(); }
+        if (code === 37) { mainButtons[i <= 0 ? mainButtons.length - 1 : i - 1].focus(); e.preventDefault(); }
     });
 
-    btn1.focus();
+    btnSections.focus();
 </script>
 
 </body>
