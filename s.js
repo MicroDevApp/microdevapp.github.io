@@ -10,7 +10,15 @@
         html.append(frame);
 
         this.create = function () {
-            return this.render();
+            var self = this;
+
+            // src ставим здесь — с nocache чтобы не кешировалось
+            frame.attr('src', HTML_URL + '?nocache=' + Date.now());
+
+            self.activity.loader(false);
+            self.activity.toggle();
+
+            return html;
         };
 
         this.render = function () {
@@ -18,11 +26,6 @@
         };
 
         this.start = function () {
-            var self = this;
-
-            // Добавляем nocache при каждом открытии
-            frame.attr('src', HTML_URL + '?nocache=' + Date.now());
-
             Lampa.Controller.add('content', {
                 toggle: function () {},
                 left: function () { Lampa.Controller.toggle('menu'); },
@@ -33,9 +36,6 @@
             });
 
             Lampa.Controller.toggle('content');
-
-            self.activity.loader(false);
-            self.activity.toggle();
         };
 
         this.pause = function () {};
