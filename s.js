@@ -1,53 +1,90 @@
 (function () {
-
     'use strict';
 
-    // Полный URL вашей страницы main.html (должен реально быть доступен по сети)
-    var HTML_URL = 'https://microdevapp.github.io/main.html';
+    function HelloComponent(object) {
+        var html = $('<div class="hello-page" style="width:100%; height:100%;"></div>');
+        var iframe = $('<iframe class="hello-page__frame" frameborder="0" allowtransparency="true" style="width:100%; height:100%; border:0; background:#15151a;"></iframe>');
+        html.append(iframe);
+
+        // путь к странице — можно положить рядом с плагином или захостить отдельно
+        var pageUrl = 'https://microdevapp.github.io/main.html';
+
+        function onMessage(e) {
+            if (!e.data || typeof e.data !== 'object') return;
+
+            if (e.data.type === 'back') {
+                Lampa.Activity.backward();
+            }
+        }
+
+        this.create = function () {
+            return this.render();
+        };
+
+        this.render = function () {
+            return html;
+        };
+
+        this.start = function () {
+            window.addEventListener('message', onMessage);
+
+            Lampa.Controller.add('content', {
+                toggle: function () {
+                    Lampa.Controller.collectionSet(html);
+                    // отдаём фокус самому iframe — дальше навигацию ведёт скрипт внутри страницы
+                    var node = iframe.get(0);
+                    if (node) node.focus();
+                },
+                left: function () {},
+                right: function () {},
+                up: function () {},
+                down: function () {},
+                back: function () {
+                    Lampa.Activity.backward();
+                }
+            });
+
+            Lampa.Controller.toggle('content');
+
+            iframe.attr('src', pageUrl);
+        };
+
+        this.pause = function () {};
+
+        this.stop = function () {
+            window.removeEventListener('message', onMessage);
+        };
+
+        this.destroy = function () {
+            window.removeEventListener('message', onMessage);
+            html.remove();
+        };
+
+        this.activity.loader(false);
+        this.activity.toggle();
+    }
+
     function startPlugin() {
+        Lampa.Component.add('hello_page', HelloComponent);
         Lampa.Menu.addButton(
-            '<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C6 2 3 5 3 10c0 4 3 7 7 7s7-3 7-7c0-5-3-8-7-8z" fill="#E74C3C"/><path d="M10 5c-2 0-4 1-4 3 0 2 2 3 4 3s4-1 4-3c0-2-2-3-4-3z" fill="#C0392B"/></svg>',
+            '<svg height="20" width="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/></svg>',
             'Привет',
             function () {
+                Lampa.Activity.push({
+                    title: 'Привет',
+                    component: 'hello_page'
+                });
+            }
+        );
+    }
 
-                Lampa.Activity.push({ url: '', title: 'Привет', component: 'web_page',  page: 1 }); 
-
-            });
-    };
-}
-
-function WebPageComponent(object) {
-    var html = $('<div class="full-screen-container" style="width: 100%; height: 100%; background: #000;"></div>');
-    var iframe = $('<iframe src="' + HTML_URL + '" style="width: 100%; height: 100%; border: none;"></iframe>');
-
-    this.create = function () {
-        html.append(iframe);
-        return html;
-    };
-
-    this.render = function () {};
-
-    this.back = function () {
-        Lampa.Activity.backward();
-    };
-
-    this.destroy = function () {
-        html.remove();
-    };
-}
-
-// Регистрируем компонент
-Lampa.Component.add('web_page', WebPageComponent);
-
-
-if (window.appready) {
-    startPlugin();
-} else {
-
-    Lampa.Listener.follow('app', function (e) {
-        if (e.type == 'ready') {
-            startPlugin();
-        }
-    });
-}
+    if (window.appready) {
+        startPlugin();
+    } else {
+        Lampa.Listener.follow('app', function (e) {
+            if (e.type == 'ready') {
+                startPlugin();
+            }
+        });
+    }
 })();
