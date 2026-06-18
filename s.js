@@ -15,6 +15,8 @@
                     page: 1
                 });
             }
+
+            console.log("Hello");
         });
 
         Lampa.Component.add('test_page', function() {
