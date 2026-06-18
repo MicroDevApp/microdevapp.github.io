@@ -1,9 +1,8 @@
 (function () {
     'use strict';
 
-    var HTML_URL = 'https://microdevapp.github.io/main.html';
-
     function startPlugin() {
+        // Добавляем пункт в главное меню
         Lampa.Menu.add({
             title: 'Привет',
             subtitle: 'Мой раздел',
@@ -12,24 +11,24 @@
                 Lampa.Activity.push({
                     url: '',
                     title: 'Привет',
-                    component: 'web_page', // Имя компонента
-                    page: 1
+                    component: 'hello_page' // Имя компонента, который мы определили ниже
                 });
             }
         });
     }
 
-    function WebPageComponent(object) {
-        var html = $('<div class="full-screen-container" style="width: 100%; height: 100%; background: #000;"></div>');
-        var iframe = $('<iframe src="' + HTML_URL + '" style="width: 100%; height: 100%; border: none;"></iframe>');
+    // Регистрируем компонент
+    Lampa.Component.add('hello_page', function(object) {
+        var html = $('<div style="padding: 2em; color: #fff; font-size: 2em;">Раздел работает!</div>');
 
         this.create = function () {
-            html.append(iframe);
             return html;
         };
 
         this.render = function () {};
 
+        this.start = function () {};
+        
         this.back = function () {
             Lampa.Activity.backward();
         };
@@ -37,17 +36,15 @@
         this.destroy = function () {
             html.remove();
         };
-    }
+    });
 
-    // Регистрируем компонент
-    Lampa.Component.add('web_page', WebPageComponent);
-
-    // Инициализация
     if (window.appready) {
         startPlugin();
     } else {
         Lampa.Listener.follow('app', function (e) {
-            if (e.type == 'ready') startPlugin();
+            if (e.type == 'ready') {
+                startPlugin();
+            }
         });
     }
 })();
