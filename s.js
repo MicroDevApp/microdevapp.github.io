@@ -6,13 +6,21 @@
     function HelloComponent(object) {
         var html = $('<div style="width:100%; height:100%;"></div>');
         var frame = $('<iframe style="width:100%; height:100%; border:none;"></iframe>');
+        var onMessage;
 
         html.append(frame);
 
         this.create = function () {
             var self = this;
 
-            // src ставим здесь — с nocache чтобы не кешировалось
+            // Слушаем сообщения из iframe
+            onMessage = function (e) {
+                if (e.data && e.data.type === 'lampa:back') {
+                    Lampa.Activity.backward();
+                }
+            };
+            window.addEventListener('message', onMessage);
+
             frame.attr('src', HTML_URL + '?nocache=' + Date.now());
 
             self.activity.loader(false);
@@ -20,23 +28,6 @@
 
             return html;
         };
-
-        this.create = function () {
-    var self = this;
-
-    window.addEventListener('message', function onMessage(e) {
-        if (e.data && e.data.type === 'lampa:back') {
-            Lampa.Activity.backward();
-        }
-    });
-
-    frame.attr('src', HTML_URL + '?nocache=' + Date.now());
-
-    self.activity.loader(false);
-    self.activity.toggle();
-
-    return html;
-};
 
         this.render = function () {
             return html;
@@ -59,6 +50,8 @@
         this.stop = function () {};
 
         this.destroy = function () {
+            // Убираем слушатель при выходе со страницы
+            if (onMessage) window.removeEventListener('message', onMessage);
             html.remove();
         };
     }
