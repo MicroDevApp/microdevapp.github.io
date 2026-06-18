@@ -36,7 +36,7 @@
             'Привет',
             function () {
                 Lampa.Activity.push({
-                    title: 'Привет',
+                    title: 'Олександр',
                     component: 'hello_page'
                 });
             }
