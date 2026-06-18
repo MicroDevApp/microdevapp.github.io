@@ -21,6 +21,23 @@
             return html;
         };
 
+        this.create = function () {
+    var self = this;
+
+    window.addEventListener('message', function onMessage(e) {
+        if (e.data && e.data.type === 'lampa:back') {
+            Lampa.Activity.backward();
+        }
+    });
+
+    frame.attr('src', HTML_URL + '?nocache=' + Date.now());
+
+    self.activity.loader(false);
+    self.activity.toggle();
+
+    return html;
+};
+
         this.render = function () {
             return html;
         };

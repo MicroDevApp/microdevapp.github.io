@@ -77,6 +77,13 @@
         message.textContent = 'Вы нажали Кнопку 2!';
     });
 
+    document.addEventListener('keydown', function (e) {
+    // Кнопка назад на пульте обычно это Escape (27) или Backspace (8) или спец.клавиша (461 на LG, 10009 на Samsung)
+    if (e.keyCode === 27 || e.keyCode === 8 || e.keyCode === 461 || e.keyCode === 10009) {
+        window.parent.postMessage({ type: 'lampa:back' }, '*');
+    }
+});
+
     // Обычные <button> сами получают фокус и реагируют на Enter/Space
     // через стандартное поведение браузера — дополнительный keydown не нужен.
     // Стрелки влево/вправо для переключения фокуса между кнопками:
