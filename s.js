@@ -1,49 +1,47 @@
 (function () {
     'use strict';
 
-    function startPlugin() {
-        // Добавляем пункт в главное меню
-        Lampa.Menu.add({
-            title: 'Привет',
-            subtitle: 'Мой раздел',
-            icon: '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2L2 14h4v10h6v-6h4v6h6V14h4L14 2z" fill="currentColor"/></svg>',
-            action: function () {
-                // Открываем свой экран
-                Lampa.Activity.push({
-                    url: '',
-                    title: 'Привет',
-                    component: 'hello_page',
-                    page: 1
-                });
-            }
-        });
-    }
-
-    // Регистрируем сам компонент "hello_page"
     function HelloComponent(object) {
-        var html = $('<div style="padding: 2em; color: #fff; font-size: 2em;">Привет!</div>');
+        this.object = object || {};
 
         this.create = function () {
-            return html;
+            this.html = $('<div style="padding: 3em; color: #fff; font-size: 2em; text-align: center;">Привет!</div>');
+
+            this.activity.loader(false);
+            this.activity.toggle();
         };
 
         this.render = function () {
-            return html;
+            return this.html;
         };
 
         this.start = function () {};
         this.pause = function () {};
         this.stop = function () {};
-        this.destroy = function () {
-            html.remove();
-        };
 
         this.back = function () {
             Lampa.Activity.backward();
         };
+
+        this.destroy = function () {
+            this.html.remove();
+        };
     }
 
-    Lampa.Component.add('hello_page', HelloComponent);
+    function startPlugin() {
+        Lampa.Component.add('hello_page', HelloComponent);
+
+        Lampa.Menu.addButton(
+            '<svg height="20" width="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/></svg>',
+            'Привет',
+            function () {
+                Lampa.Activity.push({
+                    title: 'Привет',
+                    component: 'hello_page'
+                });
+            }
+        );
+    }
 
     if (window.appready) {
         startPlugin();
