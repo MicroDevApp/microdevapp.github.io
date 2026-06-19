@@ -249,16 +249,25 @@
         var searchUrl = 'https://hdrezka.inc/search/' + encodeURIComponent(query);
         var fullUrl = PROXY + encodeURIComponent(searchUrl);
 
+        console.log('[search] запрос к:', fullUrl);
+
         fetch(fullUrl)
             .then(function (res) {
-                if (!res.ok) throw new Error('network');
+                console.log('[search] HTTP статус:', res.status, res.statusText);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.text();
             })
             .then(function (html) {
+                console.log('[search] получено байт:', html.length);
+                console.log('[search] первые 500 символов ответа:', html.slice(0, 500));
+
                 var items = parseResults(html);
+                console.log('[search] найдено результатов:', items.length);
+
                 renderResults(area, items);
             })
-            .catch(function () {
+            .catch(function (err) {
+                console.error('[search] ошибка:', err);
                 showError(area, 'Помилка завантаження результатів. Спробуйте ще раз.');
             });
     }
