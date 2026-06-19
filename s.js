@@ -3,6 +3,7 @@
 
     var HTML_URL = 'https://microdevapp.github.io/main.html';
 
+    // ---------- Компонент страницы "Привет" (iframe) ----------
     function HelloComponent(object) {
         var html = $('<div style="width:100%; height:100%;"></div>');
         var frame = $('<iframe style="width:100%; height:100%; border:none;"></iframe>');
@@ -13,7 +14,6 @@
         this.create = function () {
             var self = this;
 
-            // Слушаем сообщения из iframe
             onMessage = function (e) {
                 if (e.data && e.data.type === 'lampa:back') {
                     Lampa.Activity.backward();
@@ -50,13 +50,44 @@
         this.stop = function () {};
 
         this.destroy = function () {
-            // Убираем слушатель при выходе со страницы
             if (onMessage) window.removeEventListener('message', onMessage);
             html.remove();
         };
     }
 
-    function startPlugin() {
+    // ---------- Кнопка в карточке фильма ----------
+    function initFullButton() {
+        Lampa.Listener.follow('full', function (e) {
+            if (e.type !== 'complite') return;
+
+            var render = e.object.activity.render();
+            var container = render.find('.full-start-new__buttons');
+
+            if (container.find('.button--my-plugin').length) return;
+
+            var myButton = $(
+                '<div class="full-start__button selector button--my-plugin">' +
+                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+                        '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>' +
+                    '</svg>' +
+                    '<span>Моя кнопка</span>' +
+                '</div>'
+            );
+
+            myButton.on('hover:enter', function () {
+                // По нажатию открываем нашу страницу "Привет"
+                Lampa.Activity.push({
+                    title: 'Привет',
+                    component: 'hello_page'
+                });
+            });
+
+            container.append(myButton);
+        });
+    }
+
+    // ---------- Пункт в главном меню ----------
+    function initMenuButton() {
         Lampa.Component.add('hello_page', HelloComponent);
 
         Lampa.Menu.addButton(
@@ -69,6 +100,12 @@
                 });
             }
         );
+    }
+
+    // ---------- Общий запуск ----------
+    function startPlugin() {
+        initMenuButton();
+        initFullButton();
     }
 
     if (window.appready) {
