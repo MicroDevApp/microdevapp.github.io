@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Пошук</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+        background: #15151a;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+    }
+
+    .page {
+        padding: 3em;
+    }
+
+    .page__title {
+        font-size: 1.8em;
+        font-weight: 300;
+        margin-bottom: 1.5em;
+    }
+
+    /* --- Анимация поиска --- */
+    .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 5em 0;
+        color: rgba(255,255,255,0.6);
+        font-size: 1.2em;
+    }
+
+    .spinner {
+        width: 3em;
+        height: 3em;
+        border: 0.3em solid rgba(255,255,255,0.15);
+        border-top-color: #fff;
+        border-radius: 50%;
+        margin-bottom: 1.2em;
+        animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .error-state, .empty-state {
+        padding: 3em 0;
+        color: rgba(255,255,255,0.5);
+        font-size: 1.2em;
+        text-align: center;
+    }
+
+    /* --- Сетка результатов --- */
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5em;
+    }
+
+    .card {
+        width: 11em;
+        cursor: pointer;
+        outline: none;
+        border-radius: 0.6em;
+        padding: 0.3em;
+        border: 0.15em solid transparent;
+    }
+
+    .card:focus {
+        border-color: #fff;
+    }
+
+    .card__poster {
+        width: 100%;
+        height: 16em;
+        border-radius: 0.5em;
+        background: rgba(255,255,255,0.07) center / cover no-repeat;
+        margin-bottom: 0.6em;
+    }
+
+    .card__title {
+        font-size: 0.95em;
+        line-height: 1.3em;
+        color: #fff;
+        text-align: center;
+    }
+
+    .card__year {
+        font-size: 0.85em;
+        color: rgba(255,255,255,0.5);
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<div class="page">
+    <div class="page__title" id="pageTitle">Пошук...</div>
+    <div id="content"></div>
+</div>
+
+<script>
+    function getParam(name) {
+        return new URLSearchParams(window.location.search).get(name) || '';
+    }
+
+    var QUERY = getParam('q');
+    var content = document.getElementById('content');
+    var pageTitle = document.getElementById('pageTitle');
+
+    // Публичный CORS-прокси — нужен, т.к. hdrezka.inc не отдаёт
+    // заголовков, разрешающих чтение ответа с другого домена напрямую из браузера.
+    var PROXY = 'https://api.allorigins.win/raw?url=';
+
+    function showLoading() {
+        content.innerHTML =
+            '<div class="loading">' +
+                '<div class="spinner"></div>' +
+                '<div>Шукаємо «' + QUERY + '»...</div>' +
+            '</div>';
+    }
+
+    function showError(msg) {
+        content.innerHTML = '<div class="error-state">' + msg + '</div>';
+    }
+
+    function showEmpty() {
+        content.innerHTML = '<div class="empty-state">Нічого не знайдено</div>';
+    }
+
+    var cards = [];
+
+    function renderResults(items) {
+        if (!items.length) {
+            showEmpty();
+            return;
+        }
+
+        var html = '<div class="grid">';
+
+        items.forEach(function (item, i) {
+            html +=
+                '<div class="card" tabindex="0" data-index="' + i + '" data-link="' + item.link + '">' +
+                    '<div class="card__poster" style="background-image:url(\'' + item.poster + '\')"></div>' +
+                    '<div class="card__title">' + item.title + '</div>' +
+                    (item.year ? '<div class="card__year">' + item.year + '</div>' : '') +
+                '</div>';
+        });
+
+        html += '</div>';
+        content.innerHTML = html;
+
+        cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+
+        cards.forEach(function (card) {
+            card.addEventListener('click', function () {
+                var link = card.getAttribute('data-link');
+                window.parent.postMessage({ type: 'lampa:openLink', url: link }, '*');
+            });
+        });
+
+        if (cards.length) cards[0].focus();
+    }
+
+    function parseResults(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var nodes = doc.querySelectorAll('.postItem');
+        var items = [];
+
+        nodes.forEach(function (node) {
+            var linkEl = node.querySelector('.postItem-title a');
+            var imgEl = node.querySelector('.posterBg img');
+            var miscEl = node.querySelector('.misc');
+
+            if (!linkEl) return;
+
+            var title = linkEl.textContent.trim();
+            var link = linkEl.getAttribute('href') || '';
+            var poster = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('src') || '') : '';
+
+            // data-src часто относительный путь — достраиваем до полного URL
+            if (poster && poster.indexOf('http') !== 0) {
+                poster = 'https://hdrezka.inc' + poster;
+            }
+
+            var misc = miscEl ? miscEl.textContent.trim() : '';
+            var year = (misc.match(/\d{4}/) || [''])[0];
+
+            items.push({ title: title, link: link, poster: poster, year: year });
+        });
+
+        return items;
+    }
+
+    function runSearch() {
+        if (!QUERY) {
+            showError('Не вказано назву для пошуку');
+            return;
+        }
+
+        pageTitle.textContent = 'Пошук: ' + QUERY;
+        showLoading();
+
+        var searchUrl = 'https://hdrezka.inc/search/' + encodeURIComponent(QUERY);
+        var fullUrl = PROXY + encodeURIComponent(searchUrl);
+
+        fetch(fullUrl)
+            .then(function (res) {
+                if (!res.ok) throw new Error('network');
+                return res.text();
+            })
+            .then(function (html) {
+                var items = parseResults(html);
+                renderResults(items);
+            })
+            .catch(function () {
+                showError('Помилка завантаження результатів. Спробуйте ще раз.');
+            });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        var code = e.keyCode;
+
+        if (code === 27 || code === 461 || code === 10009) {
+            window.parent.postMessage({ type: 'lampa:back' }, '*');
+            e.preventDefault();
+            return;
+        }
+
+        if (!cards.length) return;
+
+        var active = document.activeElement;
+        var idx = cards.indexOf(active);
+        if (idx === -1) return;
+
+        var cols = Math.floor(content.querySelector('.grid').clientWidth / (cards[0].offsetWidth + 24)) || 1;
+
+        if (code === 39) { if (cards[idx + 1]) cards[idx + 1].focus(); e.preventDefault(); }
+        if (code === 37) { if (cards[idx - 1]) cards[idx - 1].focus(); e.preventDefault(); }
+        if (code === 40) { if (cards[idx + cols]) cards[idx + cols].focus(); e.preventDefault(); }
+        if (code === 38) { if (cards[idx - cols]) cards[idx - cols].focus(); e.preventDefault(); }
+        if (code === 13) { active.click(); e.preventDefault(); }
+    });
+
+    runSearch();
+</script>
+
+</body>
+</html>
