@@ -140,6 +140,8 @@
         return new URLSearchParams(window.location.search).get(name) || '';
     }
 
+    var PROXY = 'https://api.allorigins.win/raw?url=';
+
     var title  = getParam('title');
     var poster = getParam('poster');
 
@@ -163,7 +165,6 @@
     }
 
     // --- Поиск и парсинг hdrezka ---
-    var PROXY = 'https://api.allorigins.win/raw?url=';
 
     function showLoading(area) {
         area.innerHTML =
