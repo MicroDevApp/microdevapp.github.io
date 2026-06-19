@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Перегляд</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+        color: #fff;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+    }
+
+    .page {
+        padding: 3em;
+        display: flex;
+        gap: 2em;
+    }
+
+    .poster {
+        width: 14em;
+        flex-shrink: 0;
+        border-radius: 0.8em;
+        overflow: hidden;
+        background: rgba(255,255,255,0.07);
+    }
+
+    .poster img {
+        width: 100%;
+        display: block;
+    }
+
+    .poster--empty {
+        height: 21em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.3);
+        font-size: 0.9em;
+        text-align: center;
+        padding: 1em;
+    }
+
+    .info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .title {
+        font-size: 2.2em;
+        font-weight: 300;
+        margin-bottom: 0.4em;
+    }
+
+    .meta {
+        display: flex;
+        gap: 1em;
+        align-items: center;
+        margin-bottom: 1.2em;
+        color: rgba(255,255,255,0.6);
+        font-size: 1.1em;
+    }
+
+    .rating {
+        background: rgba(255,255,255,0.1);
+        padding: 0.3em 0.8em;
+        border-radius: 0.5em;
+        color: #fff;
+    }
+
+    .genres {
+        margin-bottom: 1.5em;
+        color: rgba(255,255,255,0.6);
+    }
+
+    .overview {
+        line-height: 1.6;
+        color: rgba(255,255,255,0.85);
+        max-width: 40em;
+    }
+
+    .empty-state {
+        padding: 3em;
+        color: rgba(255,255,255,0.5);
+        font-size: 1.3em;
+    }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+    function getParam(name) {
+        return new URLSearchParams(window.location.search).get(name) || '';
+    }
+
+    var title    = getParam('title');
+    var year     = getParam('year');
+    var rating   = getParam('rating');
+    var overview = getParam('overview');
+    var genres   = getParam('genres');
+    var poster   = getParam('poster');
+
+    var root = document.getElementById('root');
+
+    if (!title) {
+        root.innerHTML = '<div class="empty-state">Дані про фільм/серіал не передані</div>';
+    } else {
+        var posterHtml = poster
+            ? '<div class="poster"><img src="' + poster + '" alt=""></div>'
+            : '<div class="poster poster--empty">Без постера</div>';
+
+        root.innerHTML =
+            '<div class="page">' +
+                posterHtml +
+                '<div class="info">' +
+                    '<div class="title">' + title + '</div>' +
+                    '<div class="meta">' +
+                        (year ? '<span>' + year + '</span>' : '') +
+                        (rating ? '<span class="rating">' + rating + ' TMDB</span>' : '') +
+                    '</div>' +
+                    (genres ? '<div class="genres">' + genres + '</div>' : '') +
+                    (overview ? '<div class="overview">' + overview + '</div>' : '') +
+                '</div>' +
+            '</div>';
+    }
+
+    // Кнопка назад на пульте
+    document.addEventListener('keydown', function (e) {
+        var code = e.keyCode;
+        if (code === 27 || code === 461 || code === 10009) {
+            window.parent.postMessage({ type: 'lampa:back' }, '*');
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>
