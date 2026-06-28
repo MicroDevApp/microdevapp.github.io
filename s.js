@@ -28,12 +28,13 @@
             var hasMovieData = Boolean(object.movie_title);
             var targetUrl = hasMovieData ? VIEWER_HTML_URL : MAIN_HTML_URL;
 
-            if (object.movie_title)    params.set('title', object.movie_title);
-            if (object.movie_year)     params.set('year', object.movie_year);
-            if (object.movie_rating)   params.set('rating', object.movie_rating);
-            if (object.movie_overview) params.set('overview', object.movie_overview);
-            if (object.movie_genres)   params.set('genres', object.movie_genres);
-            if (object.movie_poster)   params.set('poster', object.movie_poster);
+            if (object.movie_title)        params.set('title', object.movie_title);
+            if (object.movie_search_title) params.set('searchTitle', object.movie_search_title);
+            if (object.movie_year)         params.set('year', object.movie_year);
+            if (object.movie_rating)       params.set('rating', object.movie_rating);
+            if (object.movie_overview)     params.set('overview', object.movie_overview);
+            if (object.movie_genres)       params.set('genres', object.movie_genres);
+            if (object.movie_poster)       params.set('poster', object.movie_poster);
 
             frame.attr('src', targetUrl + '?' + params.toString());
 
@@ -92,6 +93,9 @@
                 var card = e.object.movie || e.object.card || {};
 
                 var title = card.title || card.name || '';
+                // Оригинальное название — не зависит от языка интерфейса Lampa,
+                // используется для поиска на hdrezka
+                var searchTitle = card.original_title || card.original_name || title;
                 var year = ((card.release_date || card.first_air_date || '') + '').slice(0, 4);
                 var rating = card.vote_average ? parseFloat(card.vote_average).toFixed(1) : '';
                 var overview = card.overview || '';
@@ -102,6 +106,7 @@
                     title: 'Привет',
                     component: 'hello_page',
                     movie_title: title,
+                    movie_search_title: searchTitle,
                     movie_year: year,
                     movie_rating: rating,
                     movie_overview: overview,

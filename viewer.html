@@ -140,10 +140,11 @@
         return new URLSearchParams(window.location.search).get(name) || '';
     }
 
-    var PROXY = 'https://api.allorigins.win/raw?url=';
+    var PROXY = 'https://corsproxy.io/?url=';
 
-    var title  = getParam('title');
-    var poster = getParam('poster');
+    var title       = getParam('title');
+    var searchTitle = getParam('searchTitle') || title;
+    var poster      = getParam('poster');
 
     var root = document.getElementById('root');
     var cards = [];
@@ -161,7 +162,7 @@
                 '<div id="searchArea"></div>' +
             '</div>';
 
-        runSearch(title);
+        runSearch(searchTitle);
     }
 
     // --- Поиск и парсинг hdrezka ---
