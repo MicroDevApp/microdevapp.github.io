@@ -237,7 +237,9 @@
         cards.forEach(function (card) {
             card.addEventListener('click', function () {
                 var link = card.getAttribute('data-link');
+                console.log('[viewer] клик по карточке, ссылка:', link);
                 window.parent.postMessage({ type: 'lampa:openLink', url: link }, '*');
+                console.log('[viewer] postMessage отправлен');
             });
         });
 
@@ -277,6 +279,7 @@
     // --- Навигация пультом ---
     document.addEventListener('keydown', function (e) {
         var code = e.keyCode;
+        console.log('[viewer] keydown code:', code);
 
         if (code === 27 || code === 461 || code === 10009) {
             window.parent.postMessage({ type: 'lampa:back' }, '*');

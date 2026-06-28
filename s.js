@@ -18,11 +18,15 @@
             onMessage = function (e) {
                 if (!e.data) return;
 
+                console.log('[s.js] получено сообщение:', e.data);
+
                 if (e.data.type === 'lampa:back') {
                     Lampa.Activity.backward();
                 }
 
                 if (e.data.type === 'lampa:openLink' && e.data.url) {
+                    console.log('[s.js] открываю external_page с url:', e.data.url);
+
                     Lampa.Activity.push({
                         title: 'Перегляд',
                         component: 'external_page',
@@ -89,6 +93,8 @@
 
         this.create = function () {
             var self = this;
+
+            console.log('[s.js] ExternalPageComponent открывает url:', object.external_url);
 
             // Внешний сайт сам управляет своим JS — мы не вмешиваемся
             // в его код, поэтому postMessage от него не ожидается;
