@@ -94,12 +94,14 @@
         this.create = function () {
             var self = this;
 
-            console.log('[s.js] ExternalPageComponent открывает url:', object.external_url);
+            // hdrezka отдаёт X-Frame-Options/CSP, запрещающие показ в iframe.
+            // Прокси не передаёт эти заголовки браузеру, поэтому страница
+            // показывается, хотя сам HTML/CSS/JS остаются от hdrezka как есть.
+            var proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(object.external_url);
 
-            // Внешний сайт сам управляет своим JS — мы не вмешиваемся
-            // в его код, поэтому postMessage от него не ожидается;
-            // выход — только через системную кнопку "назад" в Controller.
-            frame.attr('src', object.external_url || 'about:blank');
+            console.log('[s.js] ExternalPageComponent открывает url:', proxied);
+
+            frame.attr('src', object.external_url ? proxied : 'about:blank');
 
             self.activity.loader(false);
             self.activity.toggle();
