@@ -16,8 +16,18 @@
             var self = this;
 
             onMessage = function (e) {
-                if (e.data && e.data.type === 'lampa:back') {
+                if (!e.data) return;
+
+                if (e.data.type === 'lampa:back') {
                     Lampa.Activity.backward();
+                }
+
+                if (e.data.type === 'lampa:openLink' && e.data.url) {
+                    Lampa.Activity.push({
+                        title: 'Перегляд',
+                        component: 'external_page',
+                        external_url: e.data.url
+                    });
                 }
             };
             window.addEventListener('message', onMessage);
@@ -66,6 +76,52 @@
 
         this.destroy = function () {
             if (onMessage) window.removeEventListener('message', onMessage);
+            html.remove();
+        };
+    }
+
+    // ---------- Компонент для открытия произвольной внешней страницы (например hdrezka) ----------
+    function ExternalPageComponent(object) {
+        var html = $('<div style="width:100%; height:100%;"></div>');
+        var frame = $('<iframe style="width:100%; height:100%; border:none;"></iframe>');
+
+        html.append(frame);
+
+        this.create = function () {
+            var self = this;
+
+            // Внешний сайт сам управляет своим JS — мы не вмешиваемся
+            // в его код, поэтому postMessage от него не ожидается;
+            // выход — только через системную кнопку "назад" в Controller.
+            frame.attr('src', object.external_url || 'about:blank');
+
+            self.activity.loader(false);
+            self.activity.toggle();
+
+            return html;
+        };
+
+        this.render = function () {
+            return html;
+        };
+
+        this.start = function () {
+            Lampa.Controller.add('content', {
+                toggle: function () {},
+                left: function () {},
+                right: function () {},
+                up: function () {},
+                down: function () {},
+                back: function () { Lampa.Activity.backward(); }
+            });
+
+            Lampa.Controller.toggle('content');
+        };
+
+        this.pause = function () {};
+        this.stop = function () {};
+
+        this.destroy = function () {
             html.remove();
         };
     }
@@ -123,6 +179,7 @@
     // ---------- Пункт в главном меню ----------
     function initMenuButton() {
         Lampa.Component.add('hello_page', HelloComponent);
+        Lampa.Component.add('external_page', ExternalPageComponent);
 
         Lampa.Menu.addButton(
             '<svg height="20" width="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/></svg>',
