@@ -94,14 +94,13 @@
         this.create = function () {
             var self = this;
 
-            // hdrezka отдаёт X-Frame-Options/CSP, запрещающие показ в iframe.
-            // Прокси не передаёт эти заголовки браузеру, поэтому страница
-            // показывается, хотя сам HTML/CSS/JS остаются от hdrezka как есть.
-            var proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(object.external_url);
+            console.log('[s.js] ExternalPageComponent открывает url напрямую:', object.external_url);
 
-            console.log('[s.js] ExternalPageComponent открывает url:', proxied);
+            frame.attr('src', object.external_url || 'about:blank');
 
-            frame.attr('src', object.external_url ? proxied : 'about:blank');
+            // Если прямая загрузка не сработает (например из-за X-Frame-Options),
+            // в консоли появится ошибка "Refused to display ... in a frame" —
+            // тогда вернёмся к прокси-варианту.
 
             self.activity.loader(false);
             self.activity.toggle();
